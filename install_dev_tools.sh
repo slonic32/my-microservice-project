@@ -25,10 +25,10 @@ check_software() {
     Need_Docker_Compose=1
   fi
 
-  if command -v python3 >/dev/null 2>&1; then
-    echo "Python is already installed."
+  if command -v python3 >/dev/null 2>&1 && python3 -c 'import sys; exit(0 if sys.version_info >= (3, 9) else 1)'; then
+    echo "Python 3.9 or newer is already installed: $(python3 --version)"
   else
-    echo "Python is not installed."
+    echo "Python 3.9 or newer is not installed."
     Need_Python=1
   fi
 
@@ -85,9 +85,15 @@ install_docker_compose() {
 }
 
 install_python() {
-  echo "Installing Python and pip..."
+  echo "Installing Python..."
 
   sudo apt-get install -y python3
+
+  if ! python3 -c 'import sys; exit(0 if sys.version_info >= (3, 9) else 1)'; then
+
+    echo "Python version is lower than 3.9. Please install Python 3.9 or newer manually."
+    exit 1
+  fi
 }
 
 install_pip() {
