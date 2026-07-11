@@ -1,2 +1,4 @@
 lesson-5/.terraform.lock.hcl
 lesson-5/.terraform/
+lesson-5/terraform.tfstate
+lesson-5/terraform.tfstate.backup
