@@ -1,24 +1,40 @@
-# Підключаємо модуль для S3 та DynamoDB
-module "s3_backend" {
-  source      = "./modules/s3-backend"                # Шлях до модуля
-  bucket_name = "terraform-state-bucket-hordiyevskyy" # Ім'я S3-бакета
-  table_name  = "terraform-locks"                     # Ім'я DynamoDB
+# Вказуємо версію Terraform та провайдера AWS
+terraform {
+  required_version = ">= 1.5.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 5.0"
+    }
+  }
 }
 
+# Налаштовуємо AWS провайдер
+provider "aws" {
+  region = var.aws_region
+}
+
+# Підключаємо модуль для S3 та DynamoDB
+module "s3_backend" {
+  source      = "./modules/s3-backend"   # Шлях до модуля
+  bucket_name = var.tf_state_bucket_name # Ім'я S3-бакета
+  table_name  = var.tf_lock_table_name   # Ім'я DynamoDB
+}
 
 # Підключаємо модуль для VPC
 module "vpc" {
-  source             = "./modules/vpc"                                     # Шлях до модуля VPC
-  vpc_cidr_block     = "10.0.0.0/16"                                       # CIDR блок для VPC
-  public_subnets     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]       # Публічні підмережі
-  private_subnets    = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]       # Приватні підмережі
-  availability_zones = ["eu-central-1a", "eu-central-1b", "eu-central-1c"] # Зони доступності
-  vpc_name           = "vpc"                                               # Ім'я VPC
+  source             = "./modules/vpc" # Шлях до модуля VPC
+  vpc_cidr_block     = var.vpc_cidr_block
+  public_subnets     = var.public_subnets
+  private_subnets    = var.private_subnets
+  availability_zones = var.availability_zones
+  vpc_name           = var.vpc_name
 }
 
 # Підключаємо модуль ECR
 module "ecr" {
   source       = "./modules/ecr"
-  ecr_name     = "lesson-5-ecr"
-  scan_on_push = true
+  ecr_name     = var.ecr_name
+  scan_on_push = var.ecr_scan_on_push
 }
