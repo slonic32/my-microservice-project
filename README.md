@@ -4,14 +4,19 @@
 
 ## Мета
 
-Навчитися основам роботи з Git і GitHub.
+Закріпити практику роботи з:
+- Terraform (IaC)
+- AWS (VPC, ECR, EKS)
+- Docker
+- Kubernetes + Helm
 
 ## Домашні завдання
 
-### lesson-5
-Папка `lesson-5` містить домашнє завдання з теми Terraform (IaC):
-- налаштування backend (S3 + DynamoDB),
-- модулі мережі (VPC, public/private subnet, маршрутизація),
-- модуль ECR.
+### lesson-7
+Папка `lesson-7` містить домашнє завдання з Helm та Kubernetes:
+- EKS кластер через Terraform,
+- ECR для образу Django,
+- Helm chart (`deployment`, `service`, `hpa`, `configmap`, `secret`),
+- деплой застосунку в Kubernetes.
 
-Детальний опис і команди дивись у: [lesson-5/README.md](./lesson-5/README.md)
+Деталі: [lesson-7/README.md](./lesson-7/README.md)
