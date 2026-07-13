@@ -1,0 +1,35 @@
+image:
+  repository: "YOUR_ACCOUNT_ID.dkr.ecr.eu-central-1.amazonaws.com/lesson-7-ecr"
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 8000
+
+resources:
+  requests:
+    cpu: "200m"
+    memory: "256Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+config:
+  POSTGRES_HOST: "db"
+  POSTGRES_PORT: "5432"
+  POSTGRES_USER: "django_user"
+  POSTGRES_DB: "django_db"
+  ALLOWED_HOSTS: "localhost,127.0.0.1,nginx,django"
+
+secret:
+  POSTGRES_PASSWORD: "change-me"

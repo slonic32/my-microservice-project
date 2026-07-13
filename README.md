@@ -1,1 +1,17 @@
-# my-microservice-project
+# Мій власний мікросервісний проєкт
+
+Це репозиторій для навчального проєкту в межах курсу "DevOps CI/CD".
+
+## Мета
+
+Навчитися основам роботи з Git і GitHub.
+
+## Домашні завдання
+
+### lesson-5
+Папка `lesson-5` містить домашнє завдання з теми Terraform (IaC):
+- налаштування backend (S3 + DynamoDB),
+- модулі мережі (VPC, public/private subnet, маршрутизація),
+- модуль ECR.
+
+Детальний опис і команди дивись у: [lesson-5/README.md](./lesson-5/README.md)
