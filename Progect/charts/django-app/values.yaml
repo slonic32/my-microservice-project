@@ -1,5 +1,5 @@
 image:
-  repository: "YOUR_ACCOUNT_ID.dkr.ecr.eu-central-1.amazonaws.com/lesson-7-ecr"
+  repository: "128066560844.dkr.ecr.eu-central-1.amazonaws.com/lesson-7-ecr"
   tag: "latest"
   pullPolicy: IfNotPresent
 
@@ -33,3 +33,4 @@ config:
 
 secret:
   POSTGRES_PASSWORD: "change-me"
+  DJANGO_SECRET_KEY: "change-me-to-a-long-random-value"

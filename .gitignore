@@ -1,18 +1,19 @@
-lesson-7/.terraform.lock.hcl
-lesson-7/.terraform/
-lesson-7/terraform.tfstate
-lesson-7/terraform.tfstate.backup
-lesson-7/terraform.tfvars
+Progect/.terraform.lock.hcl
+Progect/.terraform/
+Progect/terraform.tfstate
+Progect/terraform.tfstate.backup
+Progect/terraform.tfvars
 
 .env
 
 django/homework/__pycache__/
 
-lesson-7/.terraform.lock.hcl
-lesson-7/.terraform/
+Progect/.terraform.lock.hcl
+Progect/.terraform/
 
-lesson-7/terraform.tfvars
+Progect/terraform.tfvars
 
-lesson-7/.terraform
+Progect/.terraform
 
-lesson-7/.terraform*
+Progect/.terraform*
+

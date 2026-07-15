@@ -48,3 +48,14 @@ variable "ecr_scan_on_push" {
   type        = bool
   default     = true
 }
+
+variable "github_username" {
+  description = "GitHub username for Jenkins"
+  type        = string
+}
+
+variable "github_token" {
+  description = "GitHub Personal Access Token for Jenkins"
+  type        = string
+  sensitive   = true
+}
