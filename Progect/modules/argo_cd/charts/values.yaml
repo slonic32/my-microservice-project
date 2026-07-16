@@ -3,8 +3,8 @@ applications:
     project: default
 
     source:
-      repoURL: https://github.com/slonic32/my-microservice-project.git
-      path: Progect/charts/django-app
+      repoURL: https://github.com/slonic32/my-microservice-gitops.git
+      path: charts/django-app
       targetRevision: main
 
       helm:

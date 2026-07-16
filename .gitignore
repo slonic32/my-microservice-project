@@ -1,19 +1,13 @@
-Progect/.terraform.lock.hcl
-Progect/.terraform/
-Progect/terraform.tfstate
-Progect/terraform.tfstate.backup
-Progect/terraform.tfvars
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+terraform.tfvars
 
+# Environment
 .env
 
-django/homework/__pycache__/
-
-Progect/.terraform.lock.hcl
-Progect/.terraform/
-
-Progect/terraform.tfvars
-
-Progect/.terraform
-
-Progect/.terraform*
-
+# Python
+__pycache__/
+*.py[cod]

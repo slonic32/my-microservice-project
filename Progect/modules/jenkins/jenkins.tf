@@ -97,11 +97,10 @@ resource "helm_release" "jenkins" {
   ]
 
   depends_on = [
-
     kubernetes_service_account_v1.jenkins_sa,
     kubernetes_storage_class_v1.ebs_sc,
-    kubernetes_secret_v1.github_credentials
-
+    kubernetes_secret_v1.github_credentials,
+    kubernetes_secret_v1.jenkins_admin_credentials
   ]
 }
 
@@ -116,5 +115,19 @@ resource "kubernetes_secret_v1" "github_credentials" {
   data = {
     GITHUB_USERNAME = var.github_username
     GITHUB_TOKEN    = var.github_token
+  }
+}
+
+resource "kubernetes_secret_v1" "jenkins_admin_credentials" {
+  metadata {
+    name      = "jenkins-admin-credentials"
+    namespace = kubernetes_namespace_v1.jenkins.metadata[0].name
+  }
+
+  type = "Opaque"
+
+  data = {
+    jenkins-admin-user     = var.jenkins_admin_username
+    jenkins-admin-password = var.jenkins_admin_password
   }
 }

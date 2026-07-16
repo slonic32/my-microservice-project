@@ -1,7 +1,10 @@
 controller:
   admin:
     username: admin
-    password: admin123
+    createSecret: false
+    existingSecret: jenkins-admin-credentials
+    userKey: jenkins-admin-user
+    passwordKey: jenkins-admin-password
 
   serviceType: LoadBalancer
   servicePort: 80
@@ -70,6 +73,10 @@ controller:
         jobs:
           - script: >
               pipelineJob("goit-django-docker") {
+                triggers {
+                  scm("H/5 * * * *")
+                }
+
                 definition {
                   cpsScm {
                     scm {
@@ -81,11 +88,12 @@ controller:
                         branches("*/main")
                       }
                     }
+
                     scriptPath("django/Jenkinsfile")
                   }
                 }
               }
-              
+
 persistence:
   enabled: true
   storageClass: "ebs-sc"

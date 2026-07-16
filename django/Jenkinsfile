@@ -20,6 +20,7 @@ spec:
           value: "true"
         - name: AWS_EC2_METADATA_DISABLED
           value: "true"
+
     - name: git
       image: alpine/git:2.47.2
       command: ["sleep"]
@@ -28,19 +29,32 @@ spec:
     }
   }
 
+  options {
+    skipDefaultCheckout(true)
+    timestamps()
+  }
+
   environment {
-    ECR_REGISTRY  = "128066560844.dkr.ecr.eu-central-1.amazonaws.com"
-    IMAGE_NAME    = "lesson-7-ecr"
-    IMAGE_TAG     = "v1.0.${BUILD_NUMBER}"
+    ECR_REGISTRY = "128066560844.dkr.ecr.eu-central-1.amazonaws.com"
+    IMAGE_NAME   = "lesson-7-ecr"
+    IMAGE_TAG    = "v1.0.${BUILD_NUMBER}"
 
-    GITOPS_REPO   = "github.com/slonic32/my-microservice-project.git"
-    GITOPS_VALUES = "Progect/charts/django-app/values.yaml"
+    GITOPS_REPO   = "github.com/slonic32/my-microservice-gitops.git"
+    GITOPS_VALUES = "charts/django-app/values.yaml"
 
-    COMMIT_EMAIL  = "jenkins@localhost"
-    COMMIT_NAME   = "jenkins"
+    COMMIT_EMAIL = "jenkins@localhost"
+    COMMIT_NAME  = "jenkins"
   }
 
   stages {
+    stage('Checkout') {
+      steps {
+        container('git') {
+          checkout scm
+        }
+      }
+    }
+
     stage('Build & Push Docker Image') {
       steps {
         container('kaniko') {
@@ -66,6 +80,8 @@ spec:
             )
           ]) {
             sh '''
+              rm -rf gitops
+
               git clone \
                 https://${GIT_USERNAME}:${GIT_PAT}@${GITOPS_REPO} \
                 gitops
@@ -92,6 +108,16 @@ spec:
           }
         }
       }
+    }
+  }
+
+  post {
+    success {
+      echo "Image ${ECR_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} was published"
+    }
+
+    failure {
+      echo "Pipeline failed. Check the stage logs."
     }
   }
 }

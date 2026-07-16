@@ -13,3 +13,6 @@ ecr_scan_on_push = true
 
 github_username = "your_name"
 github_token    = "github_pat_your_secrete_token"
+
+jenkins_admin_username = "admin"
+jenkins_admin_password = "my_password"

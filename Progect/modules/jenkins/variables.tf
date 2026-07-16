@@ -1,9 +1,3 @@
-variable "kubeconfig" {
-  description = "Шлях до kubeconfig файлу"
-  type        = string
-  default     = "~/.kube/config"
-}
-
 variable "cluster_name" {
   description = "Назва Kubernetes кластера"
   type        = string
@@ -26,6 +20,17 @@ variable "github_username" {
 
 variable "github_token" {
   description = "GitHub Personal Access Token for Jenkins"
+  type        = string
+  sensitive   = true
+}
+
+variable "jenkins_admin_username" {
+  description = "Jenkins administrator username"
+  type        = string
+}
+
+variable "jenkins_admin_password" {
+  description = "Jenkins administrator password"
   type        = string
   sensitive   = true
 }

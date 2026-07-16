@@ -59,3 +59,15 @@ variable "github_token" {
   type        = string
   sensitive   = true
 }
+
+variable "jenkins_admin_username" {
+  description = "Jenkins administrator username"
+  type        = string
+  default     = "admin"
+}
+
+variable "jenkins_admin_password" {
+  description = "Jenkins administrator password"
+  type        = string
+  sensitive   = true
+}
