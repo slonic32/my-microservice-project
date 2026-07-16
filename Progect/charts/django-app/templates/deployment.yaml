@@ -12,6 +12,27 @@ spec:
       labels:
         app: {{ .Release.Name }}-django
     spec:
+      initContainers:
+        - name: django-migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          command:
+            - python
+            - manage.py
+            - migrate
+            - --noinput
+
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-config
+
+            - secretRef:
+                name: {{ .Values.existingSecret }}
+
+            - secretRef:
+                name: django-rds-credentials
+
       containers:
         - name: django
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -24,6 +45,9 @@ spec:
             httpGet:
               path: {{ .Values.probes.liveness.path }}
               port: {{ .Values.service.targetPort }}
+              httpHeaders:
+                - name: Host
+                  value: localhost
             initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
             periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
             timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds }}
@@ -33,6 +57,9 @@ spec:
             httpGet:
               path: {{ .Values.probes.readiness.path }}
               port: {{ .Values.service.targetPort }}
+              httpHeaders:
+                - name: Host
+                  value: localhost
             initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
             periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
             timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds }}
@@ -44,5 +71,9 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ .Release.Name }}-config
+
             - secretRef:
-                name: {{ .Release.Name }}-secret
+                name: {{ .Values.existingSecret }}
+
+            - secretRef:
+                name: django-rds-credentials

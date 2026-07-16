@@ -16,3 +16,15 @@ github_token    = "github_pat_your_secrete_token"
 
 jenkins_admin_username = "admin"
 jenkins_admin_password = "my_password"
+
+# RDS
+rds_use_aurora            = false
+rds_engine                 = "postgres"
+rds_engine_version         = "17"
+rds_parameter_group_family = "postgres17"
+rds_instance_class = "db.t3.micro"
+rds_multi_az              = false
+rds_username              = "postgres"
+rds_password              = "change-me"
+
+django_secret_key = "change-me"

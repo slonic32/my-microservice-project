@@ -136,7 +136,11 @@ module "argo_cd" {
     kubernetes = kubernetes
   }
 
-  depends_on = [module.jenkins]
+  depends_on = [
+    module.jenkins,
+    kubernetes_secret_v1.django_rds_credentials,
+    kubernetes_secret_v1.django_app_credentials
+  ]
 }
 
 resource "helm_release" "metrics_server" {
@@ -159,4 +163,96 @@ resource "terraform_data" "update_kubeconfig" {
   }
 
   depends_on = [module.eks]
+}
+
+module "rds" {
+  source = "./modules/rds"
+
+  name       = "myapp-db"
+  use_aurora = var.rds_use_aurora
+
+  engine                 = var.rds_engine
+  engine_version         = var.rds_engine_version
+  parameter_group_family = var.rds_parameter_group_family
+  instance_class         = var.rds_instance_class
+
+  allocated_storage     = 20
+  max_allocated_storage = 100
+  storage_type          = "gp3"
+  storage_encrypted     = true
+
+  db_name  = "myapp"
+  username = var.rds_username
+  password = var.rds_password
+
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnets
+
+  allowed_cidr_blocks = []
+
+  allowed_security_group_ids = [
+    module.eks.eks_cluster_security_group_id
+  ]
+
+  publicly_accessible = false
+  multi_az            = var.rds_multi_az
+
+  aurora_replica_count    = 1
+  backup_retention_period = 1
+  skip_final_snapshot     = true
+  deletion_protection     = false
+
+  tags = {
+    Environment = "dev"
+    Project     = "myapp"
+  }
+}
+
+resource "kubernetes_secret_v1" "django_rds_credentials" {
+  metadata {
+    name      = "django-rds-credentials"
+    namespace = kubernetes_namespace_v1.django.metadata[0].name
+  }
+
+  type = "Opaque"
+
+  data = {
+    POSTGRES_HOST     = module.rds.endpoint
+    POSTGRES_PORT     = tostring(module.rds.port)
+    POSTGRES_DB       = module.rds.database_name
+    POSTGRES_USER     = var.rds_username
+    POSTGRES_PASSWORD = var.rds_password
+  }
+
+  depends_on = [
+    module.eks,
+    module.rds
+  ]
+}
+
+
+resource "kubernetes_namespace_v1" "django" {
+  metadata {
+    name = "django"
+  }
+
+  depends_on = [module.eks]
+}
+
+resource "kubernetes_secret_v1" "django_app_credentials" {
+  metadata {
+    name      = "django-app-secret"
+    namespace = kubernetes_namespace_v1.django.metadata[0].name
+  }
+
+  type = "Opaque"
+
+  data = {
+    DJANGO_SECRET_KEY = var.django_secret_key
+  }
+
+  depends_on = [
+    module.eks,
+    kubernetes_namespace_v1.django
+  ]
 }

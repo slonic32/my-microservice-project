@@ -24,3 +24,8 @@ output "eks_cluster_certificate_authority_data" {
   description = "Base64 encoded certificate authority data for EKS"
   value       = aws_eks_cluster.eks.certificate_authority[0].data
 }
+
+output "eks_cluster_security_group_id" {
+  description = "Security Group ID, створений для EKS cluster"
+  value       = aws_eks_cluster.eks.vpc_config[0].cluster_security_group_id
+}

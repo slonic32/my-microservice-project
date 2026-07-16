@@ -71,3 +71,57 @@ variable "jenkins_admin_password" {
   type        = string
   sensitive   = true
 }
+
+variable "rds_use_aurora" {
+  description = "Створити Aurora cluster замість звичайної RDS"
+  type        = bool
+  default     = false
+}
+
+variable "rds_engine" {
+  description = "Database engine: postgres або mysql"
+  type        = string
+  default     = "postgres"
+}
+
+variable "rds_engine_version" {
+  description = "Версія database engine"
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "rds_parameter_group_family" {
+  description = "Parameter group family для обраного engine"
+  type        = string
+}
+
+variable "rds_instance_class" {
+  description = "Клас інстансу бази даних"
+  type        = string
+  default     = "db.t3.micro"
+}
+
+variable "rds_multi_az" {
+  description = "Увімкнути Multi-AZ для звичайної RDS"
+  type        = bool
+  default     = false
+}
+
+variable "rds_username" {
+  description = "Ім'я адміністратора бази даних"
+  type        = string
+  default     = "postgres"
+}
+
+variable "rds_password" {
+  description = "Пароль адміністратора бази даних"
+  type        = string
+  sensitive   = true
+}
+
+variable "django_secret_key" {
+  description = "Секретний ключ Django"
+  type        = string
+  sensitive   = true
+}
