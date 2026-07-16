@@ -211,27 +211,19 @@ terraform apply
 
 ## Налаштування Jenkins
 
-Отримайте адресу Jenkins:
+## Налаштування Jenkins
+
+Jenkins встановлюється через Terraform і Helm. Адміністративні дані та GitHub credential передаються через Kubernetes Secrets.
+
+Перевірка Jenkins:
 
 ```bash
-kubectl get svc -n jenkins
-kubectl get pods -n jenkins
+kubectl get pods,svc,pvc -n jenkins
+helm list -n jenkins
 ```
 
-У Jenkins створіть credential для доступу до GitHub:
-
-```text
-Manage Jenkins -> Credentials -> System -> Global credentials
-
-Kind: Username with password
-Username: GitHub username
-Password: GitHub Personal Access Token
-ID: github-token
-```
-
-GitHub PAT не можна зберігати у `values.yaml`, `Jenkinsfile`, Terraform state або Git.
-
-Pipeline використовує `django/Jenkinsfile` і створюється Jenkins Configuration as Code як job `goit-django-docker`.
+Pipeline job `goit-django-docker` автоматично створюється через Jenkins Configuration as Code та використовує `django/Jenkinsfile`.
+GitHub credential має ID `github-token` і створюється через JCasC із даних Kubernetes Secret. Ручне налаштування через Jenkins UI не потрібне.
 
 ## Доступ до Argo CD
 
