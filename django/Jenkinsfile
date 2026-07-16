@@ -15,6 +15,13 @@ spec:
       imagePullPolicy: IfNotPresent
       command: ["sleep"]
       args: ["99d"]
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "256Mi"
+        limits:
+          cpu: "500m"
+          memory: "768Mi"
       env:
         - name: AWS_SDK_LOAD_CONFIG
           value: "true"
@@ -25,6 +32,13 @@ spec:
       image: alpine/git:2.47.2
       command: ["sleep"]
       args: ["99d"]
+      resources:
+        requests:
+          cpu: "50m"
+          memory: "64Mi"
+        limits:
+          cpu: "200m"
+          memory: "128Mi"
 """
     }
   }
