@@ -98,7 +98,7 @@ module "eks" {
   cluster_name  = "eks-cluster-demo"
   subnet_ids    = module.vpc.private_subnets
   instance_type = "t3.small"
-  desired_size  = 2
+  desired_size  = 3
   max_size      = 3
   min_size      = 1
 }
