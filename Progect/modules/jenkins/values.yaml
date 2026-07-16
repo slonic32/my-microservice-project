@@ -54,7 +54,7 @@ controller:
     - credentials-binding:latest
     - github:latest
     - job-dsl:latest
-    - timestamper:latest
+
 
   JCasC:
     configScripts:
