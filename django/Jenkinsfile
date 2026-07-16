@@ -9,12 +9,16 @@ metadata:
     some-label: jenkins-kaniko
 spec:
   serviceAccountName: jenkins-sa
+
   containers:
     - name: kaniko
       image: gcr.io/kaniko-project/executor:v1.23.2-debug
       imagePullPolicy: IfNotPresent
-      command: ["sleep"]
-      args: ["99d"]
+      command:
+        - sleep
+      args:
+        - 99d
+
       resources:
         requests:
           cpu: "100m"
@@ -22,16 +26,22 @@ spec:
         limits:
           cpu: "500m"
           memory: "768Mi"
+
       env:
         - name: AWS_SDK_LOAD_CONFIG
           value: "true"
+
         - name: AWS_EC2_METADATA_DISABLED
           value: "true"
 
     - name: git
       image: alpine/git:2.47.2
-      command: ["sleep"]
-      args: ["99d"]
+      imagePullPolicy: IfNotPresent
+      command:
+        - sleep
+      args:
+        - 99d
+
       resources:
         requests:
           cpu: "50m"
@@ -45,6 +55,7 @@ spec:
 
   options {
     skipDefaultCheckout(true)
+    disableConcurrentBuilds()
   }
 
   environment {
@@ -52,11 +63,13 @@ spec:
     IMAGE_NAME   = "lesson-7-ecr"
     IMAGE_TAG    = "v1.0.${BUILD_NUMBER}"
 
-    GITOPS_REPO   = "github.com/slonic32/my-microservice-gitops.git"
-    GITOPS_VALUES = "charts/django-app/values.yaml"
+    GITOPS_REPO   = "github.com/slonic32/my-microservice-project.git"
+    GITOPS_VALUES = "Progect/charts/django-app/values.yaml"
 
     COMMIT_EMAIL = "jenkins@localhost"
     COMMIT_NAME  = "jenkins"
+
+    SKIP_PIPELINE = "false"
   }
 
   stages {
@@ -68,7 +81,36 @@ spec:
       }
     }
 
+    stage('Check Commit') {
+      steps {
+        container('git') {
+          script {
+            env.SKIP_PIPELINE = sh(
+              script: '''
+                if git log -1 --pretty=%B | grep -q '\\[jenkins\\]'; then
+                  echo "true"
+                else
+                  echo "false"
+                fi
+              ''',
+              returnStdout: true
+            ).trim()
+
+            if (env.SKIP_PIPELINE == "true") {
+              echo "Jenkins commit detected. Image build will be skipped."
+            }
+          }
+        }
+      }
+    }
+
     stage('Build & Push Docker Image') {
+      when {
+        expression {
+          env.SKIP_PIPELINE != "true"
+        }
+      }
+
       steps {
         container('kaniko') {
           sh '''
@@ -83,6 +125,12 @@ spec:
     }
 
     stage('Update Chart Tag in Git') {
+      when {
+        expression {
+          env.SKIP_PIPELINE != "true"
+        }
+      }
+
       steps {
         container('git') {
           withCredentials([
@@ -96,7 +144,9 @@ spec:
               rm -rf gitops
 
               git clone \
-                https://${GIT_USERNAME}:${GIT_PAT}@${GITOPS_REPO} \
+                --branch main \
+                --single-branch \
+                "https://${GIT_USERNAME}:${GIT_PAT}@${GITOPS_REPO}" \
                 gitops
 
               cd gitops
@@ -115,7 +165,9 @@ spec:
                 exit 0
               fi
 
-              git commit -m "Update image tag to ${IMAGE_TAG}"
+              git commit \
+                -m "Update image tag to ${IMAGE_TAG} [jenkins]"
+
               git push origin main
             '''
           }
@@ -126,11 +178,25 @@ spec:
 
   post {
     success {
-      echo "Image ${ECR_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} was published"
+      script {
+        if (env.SKIP_PIPELINE == "true") {
+          echo "Jenkins commit was detected. Pipeline was skipped."
+        } else {
+          echo "Image ${ECR_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} was published"
+          echo "Helm values were updated in ${GITOPS_REPO}"
+        }
+      }
     }
 
     failure {
       echo "Pipeline failed. Check the stage logs."
+    }
+
+    cleanup {
+      cleanWs(
+        deleteDirs: true,
+        disableDeferredWipeout: true
+      )
     }
   }
 }
