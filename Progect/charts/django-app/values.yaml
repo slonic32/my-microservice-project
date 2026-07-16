@@ -25,14 +25,9 @@ autoscaling:
   targetCPUUtilizationPercentage: 70
 
 config:
-  POSTGRES_HOST: "db"
-  POSTGRES_PORT: "5432"
-  POSTGRES_USER: "django_user"
-  POSTGRES_DB: "django_db"
   ALLOWED_HOSTS: "localhost,127.0.0.1,nginx,django,.eu-central-1.elb.amazonaws.com"
 
 secret:
-  POSTGRES_PASSWORD: "change-me"
   DJANGO_SECRET_KEY: "change-me-to-a-long-random-value"
 
 probes:

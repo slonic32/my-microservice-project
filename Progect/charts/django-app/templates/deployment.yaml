@@ -12,6 +12,27 @@ spec:
       labels:
         app: {{ .Release.Name }}-django
     spec:
+      initContainers:
+        - name: django-migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          command:
+            - python
+            - manage.py
+            - migrate
+            - --noinput
+
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-config
+
+            - secretRef:
+                name: {{ .Release.Name }}-secret
+
+            - secretRef:
+                name: django-rds-credentials
+
       containers:
         - name: django
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -44,5 +65,9 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ .Release.Name }}-config
+
             - secretRef:
                 name: {{ .Release.Name }}-secret
+
+            - secretRef:
+                name: django-rds-credentials

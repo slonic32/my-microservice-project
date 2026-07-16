@@ -51,3 +51,27 @@ output "jenkins_namespace" {
   value = module.jenkins.jenkins_namespace
 }
 
+output "rds_endpoint" {
+  description = "Writer endpoint RDS або Aurora"
+  value       = module.rds.endpoint
+}
+
+output "rds_reader_endpoint" {
+  description = "Reader endpoint Aurora"
+  value       = module.rds.reader_endpoint
+}
+
+output "rds_port" {
+  description = "Порт бази даних"
+  value       = module.rds.port
+}
+
+output "rds_engine" {
+  description = "Database engine"
+  value       = module.rds.engine
+}
+
+output "rds_security_group_id" {
+  description = "Security Group ID бази даних"
+  value       = module.rds.security_group_id
+}
