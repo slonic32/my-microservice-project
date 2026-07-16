@@ -1,0 +1,30 @@
+applications:
+  - name: django-app
+    project: default
+
+    source:
+      repoURL: https://github.com/slonic32/my-microservice-gitops.git
+      path: charts/django-app
+      targetRevision: main
+
+      helm:
+        valueFiles:
+          - values.yaml
+
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: django
+
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+
+      syncOptions:
+        - CreateNamespace=true
+
+repositories: []
+
+repoConfig:
+  insecure: "false"
+  enableLfs: "true"
