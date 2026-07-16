@@ -60,7 +60,10 @@ resource "aws_vpc_security_group_ingress_rule" "cidr" {
 
 # Доступ від інших Security Groups
 resource "aws_vpc_security_group_ingress_rule" "security_group" {
-  for_each = toset(var.allowed_security_group_ids)
+  for_each = {
+    for index, security_group_id in var.allowed_security_group_ids :
+    tostring(index) => security_group_id
+  }
 
   security_group_id            = aws_security_group.rds.id
   description                  = "Database access from security group"
