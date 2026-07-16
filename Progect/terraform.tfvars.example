@@ -19,10 +19,10 @@ jenkins_admin_password = "my_password"
 
 # RDS
 rds_use_aurora            = false
-rds_engine                = "postgres"
-rds_engine_version        = null
+rds_engine                 = "postgres"
+rds_engine_version         = "17"
 rds_parameter_group_family = "postgres17"
-rds_instance_class        = "db.t3.medium"
+rds_instance_class = "db.t3.micro"
 rds_multi_az              = false
 rds_username              = "postgres"
 rds_password              = "change-me"

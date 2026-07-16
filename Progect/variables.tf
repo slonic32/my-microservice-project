@@ -97,9 +97,9 @@ variable "rds_parameter_group_family" {
 }
 
 variable "rds_instance_class" {
-  description = "Клас RDS/Aurora instance"
+  description = "Клас інстансу бази даних"
   type        = string
-  default     = "db.t3.medium"
+  default     = "db.t3.micro"
 }
 
 variable "rds_multi_az" {

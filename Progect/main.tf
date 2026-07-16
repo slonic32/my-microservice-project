@@ -195,7 +195,7 @@ module "rds" {
   multi_az            = var.rds_multi_az
 
   aurora_replica_count    = 1
-  backup_retention_period = 7
+  backup_retention_period = 1
   skip_final_snapshot     = true
   deletion_protection     = false
 

@@ -35,7 +35,7 @@ variable "parameter_group_family" {
 variable "instance_class" {
   description = "Клас RDS або Aurora instance"
   type        = string
-  default     = "db.t3.medium"
+  default     = "db.t3.micro"
 }
 
 variable "allocated_storage" {
