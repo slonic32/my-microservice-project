@@ -26,3 +26,5 @@ rds_instance_class = "db.t3.micro"
 rds_multi_az              = false
 rds_username              = "postgres"
 rds_password              = "change-me"
+
+django_secret_key = "change-me"

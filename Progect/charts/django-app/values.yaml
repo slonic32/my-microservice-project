@@ -27,8 +27,7 @@ autoscaling:
 config:
   ALLOWED_HOSTS: "localhost,127.0.0.1,nginx,django,.eu-central-1.elb.amazonaws.com"
 
-secret:
-  DJANGO_SECRET_KEY: "change-me-to-a-long-random-value"
+existingSecret: django-app-secret
 
 probes:
   liveness:

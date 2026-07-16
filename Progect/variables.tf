@@ -119,3 +119,9 @@ variable "rds_password" {
   type        = string
   sensitive   = true
 }
+
+variable "django_secret_key" {
+  description = "Секретний ключ Django"
+  type        = string
+  sensitive   = true
+}

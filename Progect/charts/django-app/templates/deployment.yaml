@@ -28,7 +28,7 @@ spec:
                 name: {{ .Release.Name }}-config
 
             - secretRef:
-                name: {{ .Release.Name }}-secret
+                name: {{ .Values.existingSecret }}
 
             - secretRef:
                 name: django-rds-credentials
@@ -73,7 +73,7 @@ spec:
                 name: {{ .Release.Name }}-config
 
             - secretRef:
-                name: {{ .Release.Name }}-secret
+                name: {{ .Values.existingSecret }}
 
             - secretRef:
                 name: django-rds-credentials

@@ -138,7 +138,8 @@ module "argo_cd" {
 
   depends_on = [
     module.jenkins,
-    kubernetes_secret_v1.django_rds_credentials
+    kubernetes_secret_v1.django_rds_credentials,
+    kubernetes_secret_v1.django_app_credentials
   ]
 }
 
@@ -187,8 +188,10 @@ module "rds" {
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
-  allowed_cidr_blocks = [
-    var.vpc_cidr_block
+  allowed_cidr_blocks = []
+
+  allowed_security_group_ids = [
+    module.eks.eks_cluster_security_group_id
   ]
 
   publicly_accessible = false
@@ -227,10 +230,29 @@ resource "kubernetes_secret_v1" "django_rds_credentials" {
   ]
 }
 
+
 resource "kubernetes_namespace_v1" "django" {
   metadata {
     name = "django"
   }
 
   depends_on = [module.eks]
+}
+
+resource "kubernetes_secret_v1" "django_app_credentials" {
+  metadata {
+    name      = "django-app-secret"
+    namespace = kubernetes_namespace_v1.django.metadata[0].name
+  }
+
+  type = "Opaque"
+
+  data = {
+    DJANGO_SECRET_KEY = var.django_secret_key
+  }
+
+  depends_on = [
+    module.eks,
+    kubernetes_namespace_v1.django
+  ]
 }
