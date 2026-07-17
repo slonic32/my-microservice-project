@@ -101,12 +101,13 @@ spec:
             ).trim()
 
             if (env.SKIP_PIPELINE == "true") {
-            echo "Jenkins commit detected. Image build will be skipped."
+              echo "Jenkins commit detected. Image build will be skipped."
             }
           }
         }
       }
     }
+
     stage('Build & Push Docker Image') {
       when {
         expression {
