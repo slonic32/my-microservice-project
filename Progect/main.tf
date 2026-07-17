@@ -98,8 +98,8 @@ module "eks" {
   cluster_name  = "eks-cluster-demo"
   subnet_ids    = module.vpc.private_subnets
   instance_type = "t3.small"
-  desired_size  = 3
-  max_size      = 3
+  desired_size  = 4
+  max_size      = 5
   min_size      = 1
 }
 
@@ -254,5 +254,23 @@ resource "kubernetes_secret_v1" "django_app_credentials" {
   depends_on = [
     module.eks,
     kubernetes_namespace_v1.django
+  ]
+}
+
+module "monitoring" {
+  source = "./modules/monitoring"
+
+  name                   = "monitoring"
+  namespace              = "monitoring"
+  chart_version          = "87.12.2"
+  grafana_admin_password = var.grafana_admin_password
+
+  providers = {
+    helm = helm
+  }
+
+  depends_on = [
+    module.eks,
+    module.jenkins
   ]
 }

@@ -125,3 +125,9 @@ variable "django_secret_key" {
   type        = string
   sensitive   = true
 }
+
+variable "grafana_admin_password" {
+  description = "Пароль адміністратора Grafana"
+  type        = string
+  sensitive   = true
+}
