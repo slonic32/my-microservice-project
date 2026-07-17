@@ -75,3 +75,18 @@ output "rds_security_group_id" {
   description = "Security Group ID бази даних"
   value       = module.rds.security_group_id
 }
+
+output "monitoring_release" {
+  description = "Назва Helm-релізу monitoring"
+  value       = module.monitoring.monitoring_release_name
+}
+
+output "monitoring_namespace" {
+  description = "Namespace monitoring"
+  value       = module.monitoring.monitoring_namespace
+}
+
+output "grafana_service_name" {
+  description = "Назва Kubernetes Service Grafana"
+  value       = module.monitoring.grafana_service_name
+}
