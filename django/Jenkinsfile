@@ -87,6 +87,10 @@ spec:
           script {
             env.SKIP_PIPELINE = sh(
               script: '''
+                git config \
+                  --global \
+                  --add safe.directory "${WORKSPACE}"
+
                 if git log -1 --pretty=%B | grep -q '\\[jenkins\\]'; then
                   echo "true"
                 else
@@ -97,13 +101,12 @@ spec:
             ).trim()
 
             if (env.SKIP_PIPELINE == "true") {
-              echo "Jenkins commit detected. Image build will be skipped."
+            echo "Jenkins commit detected. Image build will be skipped."
             }
           }
         }
       }
     }
-
     stage('Build & Push Docker Image') {
       when {
         expression {
@@ -117,8 +120,7 @@ spec:
             /kaniko/executor \
               --context "${WORKSPACE}/django" \
               --dockerfile "${WORKSPACE}/django/Dockerfile" \
-              --destination "${ECR_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}" \
-              --cache=true
+              --destination "${ECR_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
           '''
         }
       }
@@ -190,13 +192,6 @@ spec:
 
     failure {
       echo "Pipeline failed. Check the stage logs."
-    }
-
-    cleanup {
-      cleanWs(
-        deleteDirs: true,
-        disableDeferredWipeout: true
-      )
     }
   }
 }
