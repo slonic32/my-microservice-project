@@ -1,18 +1,52 @@
-# Django CI/CD — Jenkins, Terraform, Helm та Argo CD
+# Фінальний DevOps-проєкт на AWS
 
-Навчальний DevOps-проєкт, у якому реалізовано повний CI/CD-процес для Django-застосунку в Amazon EKS.
+У проєкті реалізовано повну інфраструктуру для розгортання Django-застосунку в Amazon EKS. AWS-ресурси створюються через Terraform, Jenkins збирає Docker-образ і публікує його в Amazon ECR, а Argo CD автоматично синхронізує Helm chart із Kubernetes-кластером.
 
-Інфраструктура створюється через Terraform. Jenkins запускає Kubernetes Agent із Kaniko, збирає Docker-образ, публікує його в Amazon ECR та оновлює тег образу в Helm chart. Argo CD відстежує зміни в Git і автоматично синхронізує застосунок у кластері.
+Моніторинг кластера забезпечують Prometheus і Grafana. Дані застосунку зберігаються в Amazon RDS for PostgreSQL.
 
 ## Використані технології
 
 - Terraform;
-- AWS VPC, EKS, ECR, IAM, S3, DynamoDB та EBS;
-- Docker і Kaniko;
-- Kubernetes та Helm;
-- Jenkins;
+- AWS VPC, IAM, EKS, ECR, RDS, S3, DynamoDB та EBS;
+- Kubernetes і Helm;
+- Jenkins, Kaniko та JCasC;
 - Argo CD;
-- Django і PostgreSQL.
+- Prometheus, Grafana та metrics-server;
+- Docker, Django та PostgreSQL.
+
+## Архітектура
+
+```text
+Developer
+    |
+    | git push
+    v
+GitHub repository
+    |
+    v
+Jenkins Pipeline у Amazon EKS
+    |
+    +--> Kaniko збирає Docker-образ
+    |
+    +--> образ публікується в Amazon ECR
+    |
+    +--> Jenkins оновлює image.tag у Helm values.yaml
+    |
+    +--> Jenkins виконує commit і push у GitHub
+                         |
+                         v
+                      Argo CD
+                         |
+                         v
+              Django Deployment + HPA
+                         |
+                         v
+                 Amazon RDS PostgreSQL
+
+Prometheus <--- EKS metrics ---> Grafana
+```
+
+EKS worker nodes і RDS розміщуються у приватних підмережах. Вихід приватних підмереж в інтернет виконується через NAT Gateway. Django, Jenkins та Argo CD доступні через AWS Load Balancer, а Grafana і Prometheus — через port-forward.
 
 ## Структура проєкту
 
@@ -24,70 +58,30 @@
 │   ├── manage.py
 │   └── homework/
 └── Progect/
-    ├── main.tf
     ├── backend.tf
-    ├── variables.tf
+    ├── main.tf
     ├── outputs.tf
-    ├── terraform.tfvars
+    ├── variables.tf
+    ├── terraform.tfvars.example
     ├── charts/
     │   └── django-app/
     │       ├── Chart.yaml
     │       ├── values.yaml
     │       └── templates/
-    │           ├── deployment.yaml
-    │           ├── service.yaml
     │           ├── configmap.yaml
-    │           ├── secret.yaml
-    │           └── hpa.yaml
+    │           ├── deployment.yaml
+    │           ├── hpa.yaml
+    │           └── service.yaml
     └── modules/
-        ├── s3-backend/
-        ├── vpc/
+        ├── argo_cd/
         ├── ecr/
         ├── eks/
         ├── jenkins/
-        └── argo_cd/
+        ├── monitoring/
+        ├── rds/
+        ├── s3-backend/
+        └── vpc/
 ```
-
-## Схема CI/CD
-
-```text
-Developer
-    |
-    | git push
-    v
-GitHub repository
-    |
-    v
-Jenkins Pipeline (Kubernetes Agent)
-    |
-    +--> Kaniko збирає образ із django/Dockerfile
-    |
-    +--> Jenkins публікує образ в Amazon ECR
-    |
-    +--> Jenkins змінює image.tag у Helm values.yaml
-    |
-    +--> Jenkins виконує commit і push у main
-                         |
-                         v
-                      Argo CD
-                         |
-                         | автоматична синхронізація
-                         v
-                 Helm chart у Amazon EKS
-                         |
-                         v
-                  Django Deployment + HPA
-```
-
-## Як працює pipeline
-
-1. Розробник виконує push у гілку `main`.
-2. Jenkins запускає agent pod із контейнерами Kaniko та Git.
-3. Kaniko збирає Docker-образ без Docker daemon і публікує його в ECR із тегом `v1.0.BUILD_NUMBER`.
-4. Jenkins клонує GitOps-репозиторій та оновлює `image.tag` у `Progect/charts/django-app/values.yaml`.
-5. Jenkins комітить зміну та виконує push у `main`.
-6. Argo CD знаходить новий commit і автоматично застосовує Helm chart у namespace `django`.
-7. HPA масштабує Django pods на основі використання CPU.
 
 ## Передумови
 
@@ -100,59 +94,36 @@ Jenkins Pipeline (Kubernetes Agent)
 - Docker;
 - Git.
 
-Також потрібен AWS account і налаштовані credentials:
+Налаштуйте AWS credentials і перевірте доступ:
 
 ```bash
 aws configure
 aws sts get-caller-identity
 ```
 
-Скопіюйте приклад Terraform-змінних і перевірте значення:
+Створіть локальний файл зі значеннями Terraform:
 
 ```bash
 cd Progect
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-`terraform.tfvars` не повинен містити секретні ключі AWS і не повинен потрапляти в Git.
+Замініть демонстраційні значення `change-me`. Файл `terraform.tfvars` містить секрети, ігнорується Git та не повинен потрапляти в репозиторій.
 
 ## Перевірка конфігурації
 
-### Terraform
-
 ```bash
-cd Progect
 terraform fmt -check -recursive
-terraform init
 terraform validate
-terraform plan
+
+helm lint charts/django-app
+helm lint modules/argo_cd/charts
 ```
 
-### Helm chart Django
+Перевірка Django-застосунку:
 
 ```bash
-helm lint Progect/charts/django-app
-helm template django-app Progect/charts/django-app --namespace django
-```
-
-Після підключення до кластера:
-
-```bash
-helm template django-app Progect/charts/django-app \
-  --namespace django \
-  | kubectl apply --dry-run=client -f -
-```
-
-### Helm chart Argo CD Applications
-
-```bash
-helm lint Progect/modules/argo_cd/charts
-helm template argo-apps Progect/modules/argo_cd/charts --namespace argocd
-```
-
-### Docker і Django
-
-```bash
+cd ..
 docker build -t django-app:test ./django
 
 docker run --rm \
@@ -161,27 +132,50 @@ docker run --rm \
   python manage.py check
 ```
 
-## Створення інфраструктури
+## Bootstrap Terraform backend
 
-### 1. Bootstrap Terraform backend
+S3 bucket не може використовуватися як backend до того, як він буде створений. Під час першого запуску тимчасово закоментуйте блок `backend "s3"` у `Progect/backend.tf`.
 
-S3 bucket не може бути backend до того, як його буде створено. Для першого запуску тимчасово закоментуйте блок `backend "s3"` у `Progect/backend.tf`, а потім виконайте:
+Після цього виконайте:
 
 ```bash
 cd Progect
-terraform init
-terraform apply -target=module.s3_backend
+terraform init -reconfigure
+
+terraform plan \
+  -target=module.s3_backend \
+  -out=backend.tfplan
+
+terraform apply "backend.tfplan"
+rm backend.tfplan
 ```
 
-Поверніть блок backend у `backend.tf` і перенесіть локальний state у S3:
+Поверніть блок `backend "s3"` у `backend.tf` і перенесіть локальний state у S3:
 
 ```bash
 terraform init -migrate-state
+terraform state list
 ```
 
-### 2. Створення AWS-інфраструктури та EKS
+Під час запиту про копіювання state введіть `yes`.
 
-Спочатку створіть AWS-ресурси та кластер:
+## Розгортання інфраструктури
+
+Перевірте повний план:
+
+```bash
+terraform validate
+terraform plan -out=final-project.tfplan
+```
+
+Якщо plan не містить неочікуваного видалення ресурсів, виконайте:
+
+```bash
+terraform apply "final-project.tfplan"
+rm final-project.tfplan
+```
+
+Якщо Kubernetes або Helm providers не можуть підключитися до EKS під час першого запуску, спочатку створіть базову AWS-інфраструктуру:
 
 ```bash
 terraform apply \
@@ -203,56 +197,94 @@ aws eks update-kubeconfig \
 kubectl get nodes
 ```
 
-Після підключення до EKS встановіть Jenkins, metrics-server, Argo CD та Argo CD Application:
+Після підключення до EKS завершіть розгортання:
 
 ```bash
 terraform apply
 ```
 
-## Налаштування Jenkins
+Якщо AWS-ресурс із таким ім'ям уже існує, але відсутній у Terraform state, його потрібно імпортувати командою `terraform import`, а не створювати повторно або видаляти вручну.
 
-## Налаштування Jenkins
-
-Jenkins встановлюється через Terraform і Helm. Адміністративні дані та GitHub credential передаються через Kubernetes Secrets.
-
-Перевірка Jenkins:
+## Перевірка компонентів
 
 ```bash
-kubectl get pods,svc,pvc -n jenkins
-helm list -n jenkins
+kubectl get nodes
+kubectl get all -n jenkins
+kubectl get all -n argocd
+kubectl get all -n monitoring
+kubectl get pods,svc,hpa -n django
+kubectl get pvc -A
+helm list --all-namespaces
 ```
 
-Pipeline job `goit-django-docker` автоматично створюється через Jenkins Configuration as Code та використовує `django/Jenkinsfile`.
-GitHub credential має ID `github-token` і створюється через JCasC із даних Kubernetes Secret. Ручне налаштування через Jenkins UI не потрібне.
-
-## Доступ до Argo CD
-
-Перевірте сервіс:
+Перевірка metrics-server і HPA:
 
 ```bash
-kubectl get pods -n argocd
-kubectl get svc -n argocd
+kubectl top nodes
+kubectl top pods -n django
+kubectl get hpa -n django
 ```
 
-Отримайте початковий пароль адміністратора:
+У колонці `TARGETS` HPA повинен відображатися реальний відсоток CPU, а не `<unknown>`.
+
+## Доступ до сервісів
+
+### Django
 
 ```bash
-kubectl -n argocd get secret argocd-initial-admin-secret \
-  -o jsonpath="{.data.password}" \
-  | base64 -d
+kubectl get svc django-app-django -n django
+```
+
+Застосунок доступний через hostname у колонці `EXTERNAL-IP`.
+
+### Jenkins
+
+```bash
+kubectl port-forward svc/jenkins 8080:80 -n jenkins
+```
+
+Адреса: `http://localhost:8080`.
+
+### Argo CD
+
+```bash
+kubectl port-forward svc/argo-cd-argocd-server 8081:443 -n argocd
+```
+
+Адреса: `https://localhost:8081`, користувач: `admin`.
+
+Початковий пароль:
+
+```bash
+kubectl get secret argocd-initial-admin-secret \
+  -n argocd \
+  -o jsonpath='{.data.password}' | base64 -d
 
 echo
 ```
 
-Логін адміністратора:
+### Grafana
 
-```text
-admin
+```bash
+kubectl port-forward svc/grafana 3000:80 -n monitoring
 ```
 
-## Перевірка повного CI/CD-процесу
+Адреса: `http://localhost:3000`, користувач: `admin`. Пароль задається змінною `grafana_admin_password`.
 
-Після зміни Django-застосунку виконайте:
+### Prometheus
+
+```bash
+kubectl port-forward \
+  svc/monitoring-kube-prometheus-prometheus \
+  9090:9090 \
+  -n monitoring
+```
+
+Адреса: `http://localhost:9090`.
+
+## Демонстрація CI/CD
+
+Після зміни Django-застосунку виконайте commit і push у гілку, яку відстежує Jenkins:
 
 ```bash
 git add django
@@ -260,77 +292,78 @@ git commit -m "Test Jenkins CI/CD pipeline"
 git push origin main
 ```
 
-Перевірте, що новий образ з'явився в ECR:
+Jenkins автоматично:
+
+1. запускає Kubernetes Agent;
+2. збирає образ через Kaniko;
+3. публікує новий tag у ECR;
+4. змінює `image.tag` у Helm values;
+5. виконує Git commit із позначкою `[jenkins]`;
+6. виконує push у GitHub.
+
+Перевірте результат:
 
 ```bash
 aws ecr describe-images \
   --repository-name lesson-7-ecr \
   --region eu-central-1
+
+kubectl get application django-app -n argocd \
+  -o custom-columns='NAME:.metadata.name,SYNC:.status.sync.status,HEALTH:.status.health.status,REVISION:.status.sync.revision'
+
+kubectl get deployment django-app-django \
+  -n django \
+  -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
+
+kubectl rollout status deployment/django-app-django \
+  -n django \
+  --timeout=5m
 ```
 
-Перевірте Argo CD та Django:
+Argo CD Application повинна мати статуси `Synced` і `Healthy`.
 
-```bash
-kubectl get applications -n argocd
-kubectl describe application django-app -n argocd
+## Моніторинг
 
-kubectl get pods -n django
-kubectl get svc -n django
-kubectl get hpa -n django
+Модуль `monitoring` встановлює `kube-prometheus-stack`, до складу якого входять:
 
-kubectl rollout status deployment/django-app-django -n django
-```
+- Prometheus Operator;
+- Prometheus;
+- Grafana;
+- Alertmanager;
+- kube-state-metrics;
+- Prometheus Node Exporter;
+- готові Kubernetes dashboards і alert rules.
 
-Перевірте metrics-server:
-
-```bash
-kubectl top nodes
-kubectl top pods -n django
-```
-
-У `kubectl get hpa -n django` колонка `TARGETS` повинна містити реальний відсоток, наприклад `5%/70%`, а не `<unknown>/70%`.
-
-## Доступ до Django
-
-Отримайте зовнішню адресу LoadBalancer:
-
-```bash
-kubectl get svc django-app-django -n django
-```
-
-Застосунок буде доступний за адресою:
-
-```text
-http://EXTERNAL-IP
-```
-
-## Зупинка та очищення
-
-Тимчасово зупинити Django pods:
-
-```bash
-kubectl scale deployment django-app-django --replicas=0 -n django
-```
-
-Відновити роботу:
-
-```bash
-kubectl scale deployment django-app-django --replicas=2 -n django
-```
-
-Повністю видалити створену Terraform інфраструктуру:
-
-```bash
-cd Progect
-terraform destroy
-```
-
-S3 bucket із Terraform state краще видаляти окремо після видалення основної інфраструктури та збереження потрібної копії state.
+У Grafana можна використати dashboard `Kubernetes / Compute Resources / Cluster` для демонстрації CPU, memory, nodes, namespaces і pods.
 
 ## Безпека
 
-- паролі та ключі застосунку зберігаються в Kubernetes Secret, а не ConfigMap;
-- Jenkins використовує IAM Role for Service Account для push образів у ECR;
+- EKS nodes і RDS розміщені у приватних підмережах;
+- RDS не має публічного доступу;
+- доступ до RDS обмежений Security Group;
+- S3 backend використовує versioning, encryption і блокування публічного доступу;
+- Jenkins використовує IAM Role for Service Account для роботи з ECR;
 - GitHub PAT зберігається в Jenkins Credentials;
-- секрети, `.env`, `terraform.tfvars` і локальний Terraform state не повинні потрапляти в Git;
-- демонстраційні значення `change-me` потрібно замінити перед реальним запуском.
+- паролі застосунку передаються через Kubernetes Secrets;
+- `terraform.tfvars`, `.env`, state і plan-файли не повинні потрапляти в Git.
+
+Секрети зберігаються у Terraform state, тому доступ до S3 bucket потрібно обмежувати через IAM.
+
+## Видалення інфраструктури
+
+Щоб Terraform міг видалити S3 backend і після цього зберегти фінальний state, спочатку перенесіть state назад локально.
+
+1. Тимчасово закоментуйте блок `backend "s3"` у `backend.tf`.
+2. Виконайте міграцію:
+
+```bash
+terraform init -migrate-state
+```
+
+Підтвердьте копіювання state у локальний backend, а потім виконайте:
+
+```bash
+terraform destroy
+```
+
+Після перевірки видаліть локальні state-файли та переконайтеся в AWS Console, що платні ресурси EKS, EC2, NAT Gateway, Load Balancer, EBS і RDS більше не існують.
