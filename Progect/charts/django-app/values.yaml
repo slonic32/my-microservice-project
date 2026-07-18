@@ -1,6 +1,6 @@
 image:
   repository: "set-by-argo-cd"
-  tag: "v1.0.10"
+  tag: "v1.0.11"
   pullPolicy: IfNotPresent
 
 replicaCount: 2
