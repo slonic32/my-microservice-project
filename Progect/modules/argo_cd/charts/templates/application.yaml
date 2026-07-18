@@ -16,6 +16,13 @@ spec:
         {{- range .valueFiles }}
         - {{ . }}
         {{- end }}
+      {{- with .parameters }}
+      parameters:
+        {{- range . }}
+        - name: {{ .name }}
+          value: {{ .value | quote }}
+        {{- end }}
+      {{- end }}
     {{- end }}
   destination:
     server: {{ .destination.server | default "https://kubernetes.default.svc" }}

@@ -23,49 +23,37 @@ provider "aws" {
   region = var.aws_region
 }
 
+data "aws_eks_cluster" "cluster" {
+  name = module.eks.eks_cluster_name
+
+  depends_on = [module.eks]
+}
+
+data "aws_eks_cluster_auth" "cluster" {
+  name = module.eks.eks_cluster_name
+
+  depends_on = [module.eks]
+}
+
 provider "kubernetes" {
-  host = module.eks.eks_cluster_endpoint
+  host = data.aws_eks_cluster.cluster.endpoint
 
   cluster_ca_certificate = base64decode(
-    module.eks.eks_cluster_certificate_authority_data
+    data.aws_eks_cluster.cluster.certificate_authority[0].data
   )
 
-  exec {
-    api_version = "client.authentication.k8s.io/v1"
-    command     = "aws"
-
-    args = [
-      "eks",
-      "get-token",
-      "--cluster-name",
-      module.eks.eks_cluster_name,
-      "--region",
-      var.aws_region
-    ]
-  }
+  token = data.aws_eks_cluster_auth.cluster.token
 }
 
 provider "helm" {
   kubernetes {
-    host = module.eks.eks_cluster_endpoint
+    host = data.aws_eks_cluster.cluster.endpoint
 
     cluster_ca_certificate = base64decode(
-      module.eks.eks_cluster_certificate_authority_data
+      data.aws_eks_cluster.cluster.certificate_authority[0].data
     )
 
-    exec {
-      api_version = "client.authentication.k8s.io/v1"
-      command     = "aws"
-
-      args = [
-        "eks",
-        "get-token",
-        "--cluster-name",
-        module.eks.eks_cluster_name,
-        "--region",
-        var.aws_region
-      ]
-    }
+    token = data.aws_eks_cluster_auth.cluster.token
   }
 }
 
@@ -101,6 +89,10 @@ module "eks" {
   desired_size  = 4
   max_size      = 5
   min_size      = 1
+
+  providers = {
+    aws = aws
+  }
 }
 
 module "jenkins" {
@@ -108,6 +100,8 @@ module "jenkins" {
   cluster_name      = module.eks.eks_cluster_name
   oidc_provider_arn = module.eks.oidc_provider_arn
   oidc_provider_url = module.eks.oidc_provider_url
+
+  ecr_repository_url = module.ecr.repository_url
 
   github_username = var.github_username
   github_token    = var.github_token
@@ -127,9 +121,10 @@ module "jenkins" {
 }
 
 module "argo_cd" {
-  source        = "./modules/argo_cd"
-  namespace     = "argocd"
-  chart_version = "5.46.4"
+  source             = "./modules/argo_cd"
+  namespace          = "argocd"
+  chart_version      = "5.46.4"
+  ecr_repository_url = module.ecr.repository_url
 
   providers = {
     helm       = helm

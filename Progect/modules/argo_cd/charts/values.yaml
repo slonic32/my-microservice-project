@@ -11,6 +11,10 @@ applications:
         valueFiles:
           - values.yaml
 
+        parameters:
+          - name: image.repository
+            value: "${ecr_repository_url}"
+
     destination:
       server: https://kubernetes.default.svc
       namespace: django

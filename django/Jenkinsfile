@@ -59,9 +59,8 @@ spec:
   }
 
   environment {
-    ECR_REGISTRY = "128066560844.dkr.ecr.eu-central-1.amazonaws.com"
-    IMAGE_NAME   = "lesson-7-ecr"
-    IMAGE_TAG    = "v1.0.${BUILD_NUMBER}"
+    ECR_REPOSITORY_URL = "${env.ECR_REPOSITORY_URL ?: '123456789012.dkr.ecr.eu-central-1.amazonaws.com/django-app'}"
+    IMAGE_TAG           = "v1.0.${BUILD_NUMBER}"
 
     GITOPS_REPO   = "github.com/slonic32/my-microservice-project.git"
     GITOPS_VALUES = "Progect/charts/django-app/values.yaml"
@@ -121,7 +120,7 @@ spec:
             /kaniko/executor \
               --context "${WORKSPACE}/django" \
               --dockerfile "${WORKSPACE}/django/Dockerfile" \
-              --destination "${ECR_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+              --destination "${ECR_REPOSITORY_URL}:${IMAGE_TAG}"
           '''
         }
       }
@@ -185,7 +184,7 @@ spec:
         if (env.SKIP_PIPELINE == "true") {
           echo "Jenkins commit was detected. Pipeline was skipped."
         } else {
-          echo "Image ${ECR_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} was published"
+          echo "Image ${ECR_REPOSITORY_URL}:${IMAGE_TAG} was published"
           echo "Helm values were updated in ${GITOPS_REPO}"
         }
       }

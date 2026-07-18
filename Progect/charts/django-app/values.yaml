@@ -1,5 +1,5 @@
 image:
-  repository: "128066560844.dkr.ecr.eu-central-1.amazonaws.com/lesson-7-ecr"
+  repository: "set-by-argo-cd"
   tag: "v1.0.9"
   pullPolicy: IfNotPresent
 

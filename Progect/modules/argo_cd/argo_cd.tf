@@ -18,7 +18,9 @@ resource "helm_release" "argo_apps" {
   create_namespace = false
 
   values = [
-    file("${path.module}/charts/values.yaml")
+    templatefile("${path.module}/charts/values.yaml", {
+      ecr_repository_url = var.ecr_repository_url
+    })
   ]
 
   depends_on = [helm_release.argo_cd]
