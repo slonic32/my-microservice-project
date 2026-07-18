@@ -93,7 +93,9 @@ resource "helm_release" "jenkins" {
   cleanup_on_fail = true
 
   values = [
-    file("${path.module}/values.yaml")
+    templatefile("${path.module}/values.yaml", {
+      ecr_repository_url = var.ecr_repository_url
+    })
   ]
 
   depends_on = [

@@ -21,3 +21,8 @@ variable "kubeconfig" {
   type        = string
   default     = "~/.kube/config"
 }
+
+variable "ecr_repository_url" {
+  description = "URL ECR репозиторію для Django application"
+  type        = string
+}

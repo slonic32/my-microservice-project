@@ -59,6 +59,14 @@ controller:
 
   JCasC:
     configScripts:
+      environment: |
+        jenkins:
+          globalNodeProperties:
+            - envVars:
+                env:
+                  - key: ECR_REPOSITORY_URL
+                    value: "${ecr_repository_url}"
+
       github-credentials: |
         credentials:
           system:
@@ -67,8 +75,8 @@ controller:
                   - usernamePassword:
                       scope: GLOBAL
                       id: github-token
-                      username: "${GITHUB_USERNAME}"
-                      password: "${GITHUB_TOKEN}"
+                      username: "$${GITHUB_USERNAME}"
+                      password: "$${GITHUB_TOKEN}"
                       description: "GitHub credential for Jenkins CI/CD"
 
       seed-job: |
